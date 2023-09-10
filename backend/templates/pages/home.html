@@ -1,7 +1,15 @@
 {% extends "base.html" %} {% block content %}
+<div>{% include 'includes/table.html' %}</div>
+{% comment %}
 <div
+  {%
+  comment
+  %}
   class="bg-gradient-to-b from-sky-600 via-cfeBlue-100 to-cfe flex h-screen justify-center items-center text-white"
+  {%
+  endcomment
+  %}
 >
   <h1 class="text-4xl font-bold">Hello World</h1>
 </div>
-{% endblock %}
+{% endcomment %} {% endblock %}

@@ -21,6 +21,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'rest_framework',
+    "expenses.apps.ExpensesConfig",
+    "users.apps.UsersConfig",
+    "api.apps.ApiConfig",
+
 ]
 
 MIDDLEWARE = [
@@ -32,6 +37,21 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+#     ],
+
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#         'rest_framework.authentication.SessionAuthentication'
+#     ],
+
+#     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+#     'PAGE_SIZE': 6,
+# }
+
 
 ROOT_URLCONF = "tracker_main.urls"
 
