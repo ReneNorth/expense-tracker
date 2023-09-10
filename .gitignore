@@ -1,5 +1,10 @@
 text.txt
 
+# tailwind
+/node_modules
+.github/**/node_modules
+/coverage
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
