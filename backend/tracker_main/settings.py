@@ -58,7 +58,7 @@ ROOT_URLCONF = "tracker_main.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates'],
+        "DIRS": [BASE_DIR.parent / 'frontend' / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -113,11 +113,12 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = 'static/'
+STATIC_URL = 'frontend/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'static'
+    BASE_DIR.parent / 'frontend/static'
 ]
-STATIC_ROOT = BASE_DIR.parent / 'local-cdn' / 'static'
-
+STATIC_ROOT = BASE_DIR.parent / 'frontend' / 'local-cdn' / 'static'
+print(BASE_DIR.parent)
+print('BASE FIR <---')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
