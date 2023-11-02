@@ -4,8 +4,9 @@ from django.urls import path, include
 from tracker_main import views
 
 urlpatterns = [
-    path('', views.home_view, name='home'),
-    path("admin/", admin.site.urls),
+    # path('', views.home_view, name='home'),
+    path('', include('expenses.urls')),
+    path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
 ]
 

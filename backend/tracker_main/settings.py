@@ -2,7 +2,9 @@ import os
 from pathlib import Path
 import logging
 
+from django.utils.log import DEFAULT_LOGGING
 from dotenv import load_dotenv
+
 
 log = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -118,7 +120,38 @@ STATICFILES_DIRS = [
     BASE_DIR.parent / 'frontend/static'
 ]
 STATIC_ROOT = BASE_DIR.parent / 'frontend' / 'local-cdn' / 'static'
-print(BASE_DIR.parent)
-print('BASE FIR <---')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+LOGLEVEL = 'DEBUG'
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+        'django.server': DEFAULT_LOGGING['formatters']['django.server'],
+    },
+    'handlers': {
+        'console': {
+            'level': f'{LOGLEVEL}',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'django.server': DEFAULT_LOGGING['handlers']['django.server'],
+    },
+    'loggers': {
+        '': {
+            'level': LOGLEVEL,
+            'handlers': ['console', ],
+        },
+        'django.server': DEFAULT_LOGGING['loggers']['django.server'],
+    }
+}
