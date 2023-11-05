@@ -19,7 +19,7 @@ class Expense(models.Model):
     category = models.CharField(max_length=100, blank=True)
     currency = models.CharField(choices=CURRENCY_CHOICES, max_length=3,
                                 default='kzt')
-    date = models.DateField(default=timezone.now, blank=True)
+    date = models.DateTimeField(default=timezone.now, blank=True)
     who_paid = models.ForeignKey(
         User,
         related_name='expenses',

@@ -16,7 +16,8 @@ def expenses_list_view(request) -> render:
     Returns:
         _type_: _description_
     """
-    expenses_list = Expense.objects.all().prefetch_related('split')
+    expenses_list = Expense.objects.all(
+    ).prefetch_related('split').order_by('-date')
     for expense in expenses_list:
         if expense.split.exists():
             split_d = expense.split.get(user__username='D').split_proportion
