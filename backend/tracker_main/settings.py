@@ -1,10 +1,9 @@
+import logging
 import os
 from pathlib import Path
-import logging
 
 from django.utils.log import DEFAULT_LOGGING
 from dotenv import load_dotenv
-
 
 log = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -153,5 +152,9 @@ LOGGING = {
             'handlers': ['console', ],
         },
         'django.server': DEFAULT_LOGGING['loggers']['django.server'],
+        'django.template': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+        },
     }
 }
