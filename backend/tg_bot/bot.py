@@ -1,9 +1,11 @@
-from telegram import Update, ForceReply
+from telegram import (Update, ForceReply, InlineKeyboardButton, InlineKeyboardMarkup,
+                      ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (ApplicationBuilder, Application, CommandHandler, ContextTypes,
-                          PrefixHandler, MessageHandler, filters, Updater)
+                          PrefixHandler, MessageHandler, filters, Updater, ConversationHandler)
 import os
 import logging
 import requests
+from typing import List, NamedTuple, Optional
 from dotenv import load_dotenv
 
 # from expenses.config import DEFAULT_CURRENCY
@@ -19,18 +21,22 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
+log = logging.getLogger(__name__)
 
 TOKEN = os.getenv('TG_BOT_TOKEN')
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
-    user = update.effective_user
-    await update.message.reply_html(
-        rf"Hi {user.mention_html()}!",
-        reply_markup=ForceReply(selective=True),
-    )
+MAIN_MENU_KEYBOARD: list = [
+    ['/rate_on_date'],
+    ['/rate_for_month'],
+    ['/rate_year_to_date'],
+    ['/update', '/start', '/cancel'],
+]
+
+
+class BotStates():
+    MESSAGE = 'MESSAGE'
+    CATEGORY = 'CATEGORY'
 
 
 def add_expense_db(expense):
@@ -66,29 +72,66 @@ def parse_expense(message: str):
     return expense
 
 
+def get_category_keyboard() -> List[InlineKeyboardButton]:
+    line = []
+    buttons = [line]
+    for i in range(0, 3):
+        line.append(InlineKeyboardButton(f'{i}', callback_data=f'test {i}'))
+    log.info(buttons)
+    return buttons
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message when the command /start is issued."""
+    user = update.effective_user
+    await update.message.reply_html(
+        rf"Hi {user.mention_html()}!",
+        reply_markup=ForceReply(selective=True),
+    )
+
+
 async def add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if add_expense_db(parse_expense(update.message.text)) == 'ok':
+        log.info('it is ok')
         await update.message.reply_text('забрал и положил затрату в таблицу')
+        return BotStates.CATEGORY
+    return ConversationHandler.END
 
 
-# app = ApplicationBuilder().token(TOKEN).build()
+async def choose_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    log.info('we are in the category')
+    keyboard = get_category_keyboard()
+    log.info(keyboard)
+    await update.message.reply_text(text='выбери категорию',
+                                    reply_markup=InlineKeyboardMarkup(keyboard))
+    update.message.reply_text('тест прошел успешно')
+    return ConversationHandler.END
 
-# app.add_handler(PrefixHandler(['д', 'ю'], 'test', add_expense))
+
+async def cancel(update: Update) -> int:
+    """Cancels and ends the conversation."""
+    user = update.message.from_user
+    return ConversationHandler.END
 
 
 def main() -> None:
     """Start the bot."""
-    # Create the Application and pass it your bot's token.
     application = Application.builder().token(TOKEN).build()
 
-    # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(ConversationHandler(
+        entry_points=[
+            MessageHandler(
+                filters.TEXT & ~filters.COMMAND, add_expense),
+        ],
+        states={
+            BotStates.CATEGORY: [MessageHandler(
+                filters.TEXT, choose_category)]
+        },
+        fallbacks=[CommandHandler('cancel', cancel)],
+        per_message=False
+    ))
 
-    # on non command i.e message - echo the message on Telegram
-    application.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND, add_expense))
-
-    # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 

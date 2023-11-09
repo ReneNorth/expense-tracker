@@ -37,7 +37,7 @@ class Expense(models.Model):
         return self.description
 
 
-class User_split(models.Model):
+class UserSplit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name='balance')
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE,
