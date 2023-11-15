@@ -73,6 +73,7 @@ def parse_expense(message: str):
 
 
 def get_category_keyboard() -> List[InlineKeyboardButton]:
+    # теперь сюда положить категорию
     line = []
     buttons = [line]
     for i in range(0, 3):

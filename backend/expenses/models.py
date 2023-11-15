@@ -5,6 +5,23 @@ from django.utils import timezone
 User = get_user_model()
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name_plural = 'categories'
+
+
+def get_or_create_default_category() -> Category:
+    """Method creates a N/A category to populate categories field in expenses
+    is case of the category deletion
+
+    Returns:
+        User: an instance of a User with a role set to a Teacher
+    """
+    return Category.objects.get_or_create(name='N/A')[0]
+
+
 class Expense(models.Model):
     CURRENCY_CHOICES = [
         ('kzt', 'Tenge'),
@@ -14,9 +31,12 @@ class Expense(models.Model):
         ('sum', 'Sums'),
     ]
 
-    description = models.CharField(max_length=100)
+    description = models.TextField(max_length=100)
     amount = models.IntegerField()
-    category = models.CharField(max_length=100, blank=True)
+    category = models.ForeignKey(Category,
+                                 on_delete=models.SET(
+                                     get_or_create_default_category),
+                                 blank=True)
     currency = models.CharField(choices=CURRENCY_CHOICES, max_length=3,
                                 default='kzt')
     date = models.DateTimeField(default=timezone.now, blank=True)
