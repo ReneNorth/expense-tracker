@@ -26,6 +26,15 @@ log = logging.getLogger(__name__)
 TOKEN = os.getenv('TG_BOT_TOKEN')
 
 
+class Expense(NamedTuple):
+    """Structure of an expense"""
+    description: str
+    amount: int
+    category: str
+    currency: str
+    who_paid: str
+
+
 MAIN_MENU_KEYBOARD: list = [
     ['/rate_on_date'],
     ['/rate_for_month'],
@@ -91,20 +100,34 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-async def add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if add_expense_db(parse_expense(update.message.text)) == 'ok':
-        log.info('it is ok')
-        await update.message.reply_text('забрал и положил затрату в таблицу')
-        return BotStates.CATEGORY
-    return ConversationHandler.END
+async def add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE
+                      ) -> ConversationHandler.END:
+    # создать объект но пока не писать в БД
+    # если приходит категория - то добавить категорию
+
+    context.chat_data['expense'] = parse_expense(update.message.text)
+
+    return BotStates.CATEGORY
+
+    # old
+    # if add_expense_db(parse_expense(update.message.text)) == 'ok':
+    #     log.info('it is ok')
+    #     await update.message.reply_text('забрал и положил затрату в таблицу')
+    #     return BotStates.CATEGORY
+    # return ConversationHandler.END
+
+
+async def add_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    pass
 
 
 async def choose_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     log.info('we are in the category')
     keyboard = get_category_keyboard()
     log.info(keyboard)
-    await update.message.reply_text(text='выбери категорию',
+    await update.message.reply_text(text=f'{context.chat_data}',
                                     reply_markup=InlineKeyboardMarkup(keyboard))
+    # update.message.reply_text(f'{context.chat_data}')
     update.message.reply_text('тест прошел успешно')
     return ConversationHandler.END
 

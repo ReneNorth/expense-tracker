@@ -30,3 +30,4 @@ def expenses_list_view(request) -> render:
             expense.description += ' (Warning: the split was not specified)'
     return render(request, 'expenses/expense-table.html',
                   {'expenses_list': expenses_list})
+
