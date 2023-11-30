@@ -6,10 +6,13 @@ User = get_user_model()
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     class Meta:
         verbose_name_plural = 'categories'
+
+    def __str__(self) -> str:
+        return self.name
 
 
 def get_or_create_default_category() -> Category:
