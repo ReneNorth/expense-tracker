@@ -9,7 +9,11 @@ log = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR.parent / 'infra/.env')
 
+
+# https://docs.djangoproject.com/en/4.2/topics/settings/
 SECRET_KEY = os.getenv("DJANGO_KEY")
+HOST = os.getenv("HOST", default="http://127.0.0.1:8000/")
+
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -25,6 +29,7 @@ INSTALLED_APPS = [
     'rest_framework',
     "expenses.apps.ExpensesConfig",
     "users.apps.UsersConfig",
+    "tgbot.apps.TgbotConfig",
     "api.apps.ApiConfig",
 
 ]

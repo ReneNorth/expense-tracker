@@ -1,5 +1,5 @@
 from telegram import (Update, ForceReply, InlineKeyboardButton,
-                      InlineKeyboardMarkup)
+                      InlineKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Application, CommandHandler, ContextTypes,
                           MessageHandler, filters,
                           ConversationHandler, CallbackQueryHandler)
@@ -7,14 +7,18 @@ import os
 import logging
 from exeptions import WrongName
 import requests
+# from requests import Response
 from typing import List
 from dataclasses import dataclass, asdict
 from dotenv import load_dotenv
 from messages import Message
+from pathlib import Path
 
 
 load_dotenv()
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR.parent / 'infra/.env')
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,8 +29,8 @@ logging.basicConfig(
     ]
 )
 log = logging.getLogger(__name__)
-
 TOKEN = os.getenv('TG_BOT_TOKEN')
+HOST = os.getenv("HOST", default="http://127.0.0.1:8000/")
 ALLOWED_CURRENCIES = ['usd', 'eur', 'rub', 'kzt']
 
 
@@ -70,18 +74,20 @@ def add_expense_db(expense):
     log.info(type(request_body))
 
     log.info(request_body)
-    response = requests.post(url="http://127.0.0.1:8000/api/v1/expenses/",
+    response = requests.post(url=f"{HOST}api/v1/expenses/",
                              json=request_body)
     log.info(response.content)
     log.info(response.headers)
+    log.info(response.reason)
+    log.info(response.request)
     if response.status_code == (201 or 200):
         return 'ok'
 
 
-def parse_expense(message: str):
+def parse_expense(message: str) -> Expense:
     expense_list = message.split()
 
-    match expense_list[0]:
+    match expense_list[0].lower():
         case 'д':
             who_paid = 1
         case 'д':
@@ -101,12 +107,16 @@ def parse_expense(message: str):
 
 
 def get_category_keyboard() -> List[InlineKeyboardButton]:
+    response = requests.get(f'{HOST}/api/v1/categories')
     line = []
+    categories = response.json()
+    log.info(type(categories))
+    log.info(dir(categories))
     buttons = [line]
-    for i in range(0, 3):
+    for i in range(0, len(categories)):
         line.append(InlineKeyboardButton(
-            f'категория {i+1}',
-            callback_data=i+1
+            text=f'{categories[i].get("name")}',
+            callback_data=f'{categories[i].get("id")}'
         ))
     return buttons
 
@@ -129,8 +139,9 @@ async def add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE
     context.chat_data['expense'] = parsed_message
 
     keyboard = get_category_keyboard()
-    await update.message.reply_text(text=f'{context.chat_data}',
-                                    reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text(
+        text='pick a catogiry',
+        reply_markup=InlineKeyboardMarkup(keyboard))
     return BotStates.SET_CATEGORY
 
 
@@ -153,6 +164,8 @@ async def set_category(update: Update, context: ContextTypes.DEFAULT_TYPE
     query = update.callback_query
     context.chat_data['expense'].set_category(query.data)
     add_expense_db(context.chat_data['expense'])
+    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                   text='добавил расход',)
     return ConversationHandler.END
 
 
@@ -163,12 +176,12 @@ async def cancel(update: Update) -> int:
 
 
 def main() -> None:
-    """Start the bot."""
+    """Starts the bot."""
     application = Application.builder().token(TOKEN).build()
 
-    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler(
-        "set_currency", set_default_currency))
+        'set_currency', set_default_currency))
     application.add_handler(ConversationHandler(
         entry_points=[
             MessageHandler(
@@ -185,5 +198,5 @@ def main() -> None:
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

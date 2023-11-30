@@ -4,14 +4,16 @@ from .models import Expense, UserSplit, Category
 
 @admin.register(Expense)
 class ExpenseAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['id', 'description', 'amount', 'currency',
+                    'date', 'who_paid']
+    list_filter = ['date', 'who_paid']
 
 
 @admin.register(UserSplit)
-class User_split_admin(admin.ModelAdmin):
+class UserSplitAdmin(admin.ModelAdmin):
     pass
 
 
 @admin.register(Category)
-class Category_admin(admin.ModelAdmin):
-    pass
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', ]

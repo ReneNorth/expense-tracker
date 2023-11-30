@@ -13,11 +13,12 @@ class Category(models.Model):
 
 
 def get_or_create_default_category() -> Category:
-    """Method creates a N/A category to populate categories field in expenses
-    is case of the category deletion
+    """
+    Method creates a N/A category to populate categories field in expenses
+    is case of the category deletion.
 
     Returns:
-        User: an instance of a User with a role set to a Teacher
+        Category: an instance of a Category.
     """
     return Category.objects.get_or_create(name='N/A')[0]
 

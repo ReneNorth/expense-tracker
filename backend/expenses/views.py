@@ -1,5 +1,6 @@
 import logging
 from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
 from .models import Expense
 
 log = logging.getLogger(__name__)
@@ -28,6 +29,8 @@ def expenses_list_view(request) -> render:
             expense.d = (expense.amount * 0 / 100)
             expense.y = (expense.amount * 100 / 100)
             expense.description += ' (Warning: the split was not specified)'
-    return render(request, 'expenses/expense-table.html',
-                  {'expenses_list': expenses_list})
 
+    return HttpResponse(render(request, 'expenses/expense-table.html',
+                               {'expenses_list': expenses_list}))
+
+    # return
