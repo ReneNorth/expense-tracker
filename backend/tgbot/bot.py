@@ -7,12 +7,13 @@ import os
 import logging
 from exeptions import WrongName
 import requests
-# from requests import Response
 from typing import List
 from dataclasses import dataclass, asdict
 from dotenv import load_dotenv
 from messages import Message
 from pathlib import Path
+
+from helpers import convert_last_element_to_number
 
 
 load_dotenv()
@@ -39,9 +40,9 @@ class Expense:
     """Structure of an expense"""
     description: str
     amount: int
-    who_paid: int = 1
+    who_paid: int = None
     category: int = None
-    currency: str = 'kzt'
+    currency: str = None
     is_considered_debt: bool = True
 
     @classmethod
@@ -54,6 +55,9 @@ class Expense:
 
     def set_category(self, category):
         self.category = category
+
+    def set_currency(self, currency):
+        self.currency = currency
 
     def __post_init__(self):
         # Set default currency when an object is created
@@ -82,21 +86,23 @@ def parse_expense(message: str) -> Expense:
     match expense_list[0].lower():
         case 'д' | 'даша' | 'даш':
             who_paid = 1
+            expense_list.pop(0)
         case 'ю' | 'юра' | 'юр' | 'юрий':
             who_paid = 2
+            expense_list.pop(0)
         case _:
             raise WrongName(
                 'possible options are д | даша | даш / ю | юра | юр | юрий')
-    if len(expense_list) >= 7:
-        currency = expense_list[6]
-    if len(expense_list) < 7:
-        currency = 'kzt'
-
-    return Expense(
-        description=expense_list[1],
-        amount=expense_list[2],
-        currency=currency,
+    log.info('expense list before ifs', expense_list)
+    if convert_last_element_to_number(expense_list[-1]) is None:
+        currency = expense_list.pop(-1)
+    amount = expense_list.pop(-1)
+    new_expense = Expense(
+        description=' '.join(expense_list),
+        amount=amount,
         who_paid=who_paid)
+    new_expense.set_currency(currency)
+    return new_expense
 
 
 def get_category_keyboard() -> List[InlineKeyboardButton]:
@@ -123,6 +129,8 @@ async def add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE
                       ) -> ConversationHandler.END:
     try:
         parsed_message = parse_expense(update.message.text)
+        log.info('после распарса сообщения')
+        log.info(parsed_message)
     except WrongName as e:
         log.warning(f'something went wrong {e}')
         await update.message.reply_text('необрабатываемое исключение')
@@ -143,16 +151,15 @@ async def how_to_add_category(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def add_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    log.info('working here')
+    log.info(reply)
     reply = update.message.text
+
+    log.info('логирую категорию из сообщения', reply)
     response = requests.post(url=f"{HOST}api/v1/categories/",
                              json={"name": reply})
-    log.info(response.status_code)
-    log.info(response.reason)
-    log.info(response.request.body)
-    log.info(response.content)
     await update.message.reply_text('Добавил категорию')
     return ConversationHandler.END
-    # context.ch.reply_text('добавил категорию!')
 
 
 async def set_default_currency(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -161,7 +168,6 @@ async def set_default_currency(update: Update, context: ContextTypes.DEFAULT_TYP
 
     Expense.set_default_currency(update.message.text)
     update.message.reply_text(text=Message.update_currency)
-
     return None
 
 
@@ -169,6 +175,7 @@ async def set_category(update: Update, context: ContextTypes.DEFAULT_TYPE
                        ) -> ConversationHandler.END:
     query = update.callback_query
     context.chat_data['expense'].set_category(query.data)
+    log.info(context.chat_data['expense'])
     add_expense_db(context.chat_data['expense'])
     await context.bot.send_message(chat_id=update.effective_chat.id,
                                    text='добавил расход',)
